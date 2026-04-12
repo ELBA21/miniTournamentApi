@@ -3,9 +3,12 @@ from sqlmodel import Session, select
 from app.models.tables import Carrera
 
 
-def crear_carrera(session: Session, nombre: str) -> Carrera:
+def crear_carrera(session: Session, nombre: str):
+    if not nombre:
+        return 400
     nueva_carrera = Carrera(nombre_carrera=nombre)
-
+    if not nueva_carrera:
+        return 404
     session.add(nueva_carrera)
     session.commit()
     session.refresh(nueva_carrera)
@@ -22,6 +25,8 @@ def get_carrera_byId(session: Session, search_id: int):
 
 
 def update_nombre_carrera(session: Session, carrera_id: int, nuevo_nombre: str):
+    if not carrera_id or not nuevo_nombre or nuevo_nombre.strip() == "":
+        return 400
     carrera_db = session.get(Carrera, carrera_id)
     if not carrera_db:
         return None
@@ -34,7 +39,9 @@ def update_nombre_carrera(session: Session, carrera_id: int, nuevo_nombre: str):
     return carrera_db
 
 
-def borrar_carrera(session: Session, carrera_id: int):
+def delete_carrera(session: Session, carrera_id: int):
+    if not carrera_id:
+        return 400
     carrera_db = session.get(Carrera, carrera_id)
     if not carrera_db:
         return False
