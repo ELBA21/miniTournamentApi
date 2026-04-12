@@ -8,16 +8,12 @@ load_dotenv()
 ENV = os.getenv("ENV", "dev")
 
 
-def load_api_description() -> str:
-    return Path("docs/api_description.md").read_text(encoding="utf-8")
-
-
 class FastAPIConfig:
     @classmethod
     def dict(cls):
         return {
             "title": os.getenv("API_TITLE", "FastAPI"),
-            "description": load_api_description(),
+            "description": "generic",
             "version": os.getenv("API_VERSION", "1.0.0"),
             "contact": {
                 "name": os.getenv("API_CONTACT_NAME", "API Support"),
