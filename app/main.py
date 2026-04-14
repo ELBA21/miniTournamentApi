@@ -16,6 +16,9 @@ from app.routers.Torneo_Categoria import router as torneo_categoria_router
 from app.routers.Fase import router as fase_router
 from app.routers.Partido import router as partido_router
 from app.routers.Partido_Equipo import router as partido_equipo_router
+from app.routers.Seccion import router as seccion_router
+from app.routers.PuntajeEquipo import router as puntajeEquipo_router
+from app.routers.Inscripcion import router as inscripcion_router
 
 
 @asynccontextmanager
@@ -49,6 +52,9 @@ app.include_router(torneo_categoria_router)
 app.include_router(fase_router)
 app.include_router(partido_router)
 app.include_router(partido_equipo_router)
+app.include_router(seccion_router)
+app.include_router(puntajeEquipo_router)
+app.include_router(inscripcion_router)
 
 
 # Healthcheck Endpoint
