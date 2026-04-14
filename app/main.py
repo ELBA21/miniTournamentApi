@@ -9,6 +9,7 @@ from app.config import FastAPIConfig, CorsConfig, ENV
 from app.routers.Carrera import router as carrera_router
 from app.routers.Jugador import router as jugador_router
 from app.routers.Equipo import router as equipo_router
+from app.routers.Jugador_Equipo import router as jugador_Equipo_router
 
 
 @asynccontextmanager
@@ -35,6 +36,7 @@ app.add_middleware(
 app.include_router(carrera_router)
 app.include_router(jugador_router)
 app.include_router(equipo_router)
+app.include_router(jugador_Equipo_router)
 
 
 # Healthcheck Endpoint
