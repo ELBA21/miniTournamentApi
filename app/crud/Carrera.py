@@ -3,12 +3,12 @@ from sqlmodel import Session, select
 from app.models.tables import Carrera
 
 
-def crear_carrera(session: Session, nombre: str):
+def create_carrera(session: Session, nombre: str):
     if not nombre:
         return 400
     nueva_carrera = Carrera(nombre_carrera=nombre)
     if not nueva_carrera:
-        return 404
+        return 404  # Creo que esto no pasara nunca xD
     session.add(nueva_carrera)
     session.commit()
     session.refresh(nueva_carrera)
@@ -44,7 +44,7 @@ def delete_carrera(session: Session, carrera_id: int):
         return 400
     carrera_db = session.get(Carrera, carrera_id)
     if not carrera_db:
-        return False
+        return None
     session.delete(carrera_db)
     session.commit()
     return True
