@@ -7,6 +7,7 @@ from fastapi.concurrency import run_in_threadpool
 from app.database import sql_connection_check, create_db_and_tables
 from app.config import FastAPIConfig, CorsConfig, ENV
 from app.routers.Carrera import router as carrera_router
+from app.routers.Jugador import router as jugador_router
 
 
 @asynccontextmanager
@@ -31,6 +32,7 @@ app.add_middleware(
     max_age=CorsConfig.max_age,
 )
 app.include_router(carrera_router)
+app.include_router(jugador_router)
 
 
 # Healthcheck Endpoint
