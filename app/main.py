@@ -10,6 +10,9 @@ from app.routers.Carrera import router as carrera_router
 from app.routers.Jugador import router as jugador_router
 from app.routers.Equipo import router as equipo_router
 from app.routers.Jugador_Equipo import router as jugador_Equipo_router
+from app.routers.Categoria import router as categoria_router
+from app.routers.Torneo import router as torneo_router
+from app.routers.Torneo_Categoria import router as torneo_categoria_router
 
 
 @asynccontextmanager
@@ -37,6 +40,9 @@ app.include_router(carrera_router)
 app.include_router(jugador_router)
 app.include_router(equipo_router)
 app.include_router(jugador_Equipo_router)
+app.include_router(categoria_router)
+app.include_router(torneo_router)
+app.include_router(torneo_categoria_router)
 
 
 # Healthcheck Endpoint
