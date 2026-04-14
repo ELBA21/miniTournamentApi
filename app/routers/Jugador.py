@@ -15,7 +15,7 @@ router = APIRouter(tags=["Jugador"])
 
 
 @router.post("/jugador/create")
-def router_createjugador(
+def router_create_jugador(
     nombre: str,
     puntaje: int,
     generacion: date,
