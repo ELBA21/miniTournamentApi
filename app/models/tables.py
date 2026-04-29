@@ -1,15 +1,12 @@
 from typing import Optional, List, Any
-from sqlmodel import Field, Relationship, SQLModel, table
+from sqlmodel import Field, Relationship, SQLModel
 from datetime import date
+from app.models.schemas import Jugador_Equipo_schema, Carrera_schema, Categoria_schema
 
 
-class Jugador_Equipo(SQLModel, table=True):
+class Jugador_Equipo(Jugador_Equipo_schema, table=True):
     __tablename__: Any = "Jugador_Equipo"
     id: int = Field(default=None, primary_key=True)
-    puntaje: int | None = 0
-    # FK
-    jugador_id: int = Field(default=None, foreign_key="Jugadores.id")
-    equipo_id: int = Field(default=None, foreign_key="Equipos.id")
 
     # Relationship
     jugador: Optional["Jugador"] = Relationship(back_populates="relacion_equipos")
@@ -44,11 +41,9 @@ class Torneo_Categoria(SQLModel, table=True):
     categoria: Optional["Categoria"] = Relationship(back_populates="relacion_Torneo")
 
 
-class Carrera(SQLModel, table=True):
+class Carrera(Carrera_schema, table=True):
     __tablename__: Any = "Carreras"
     id: int | None = Field(default=None, primary_key=True)
-
-    nombre_carrera: str | None
 
     # No descomentar, la fk no va de este lado, se queda para recordar mi error
     # jugadores: int | None = Field(default=None, foreign_key=Jugador.id)
@@ -56,10 +51,9 @@ class Carrera(SQLModel, table=True):
     jugadores: List["Jugador"] = Relationship(back_populates="carrera")
 
 
-class Categoria(SQLModel, table=True):
+class Categoria(Categoria_schema, table=True):
     __tablename__: Any = "Categorias"
     id: int | None = Field(default=None, primary_key=True)
-    tipo: str | None
     # Relationship
     torneos: List["Torneo"] = Relationship(
         back_populates="categorias", link_model=Torneo_Categoria
