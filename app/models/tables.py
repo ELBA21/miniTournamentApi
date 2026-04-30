@@ -1,7 +1,20 @@
 from typing import Optional, List, Any
-from sqlmodel import Field, Relationship, SQLModel
-from datetime import date
-from app.models.schemas import Jugador_Equipo_schema, Carrera_schema, Categoria_schema
+from sqlmodel import Field, Relationship
+from app.models.schemas import (
+    Jugador_Equipo_schema,
+    Partido_Equipo_schema,
+    Torneos_Categorias_schema,
+    Carrera_schema,
+    Categoria_schema,
+    JugadorSchema,
+    Equipo_schema,
+    Partido_schema,
+    Fase_schema,
+    Torneo_schema,
+    Seccion_schema,
+    PuntajeEquipo_schema,
+    Inscripcion_schema,
+)
 
 
 class Jugador_Equipo(Jugador_Equipo_schema, table=True):
@@ -13,30 +26,22 @@ class Jugador_Equipo(Jugador_Equipo_schema, table=True):
     equipo: Optional["Equipo"] = Relationship(back_populates="relacion_jugador")
 
 
-class Partido_Equipo(SQLModel, table=True):
+class Partido_Equipo(Partido_Equipo_schema, table=True):
     __tablename__: Any = "Partidos_Equipos"
     id: int | None = Field(default=None, primary_key=True)
-    ganador: bool | None
-    # FK
-    equipo_id: int = Field(default=None, foreign_key="Equipos.id")
-    partido_id: int = Field(default=None, foreign_key="Partidos.id")
     # Relationship
     equipo: Optional["Equipo"] = Relationship(back_populates="relacion_partido")
     partido: Optional["Partido"] = Relationship(back_populates="relacion_equipos")
     puntajeEquipo: List["PuntajeEquipo"] = Relationship(back_populates="relacion_PE")
 
 
-class Torneo_Categoria(SQLModel, table=True):
+# a
+class Torneo_Categoria(Torneos_Categorias_schema, table=True):
     __tablename__: Any = "Torneos_Categorias"
     id: int | None = Field(default=None, primary_key=True)
-    # FKs
-    torneo_id: int = Field(default=None, foreign_key="Torneos.id")
-    categoria_id: int = Field(default=None, foreign_key="Categorias.id")
 
-    #  Relationship
     inscripciones: List["Inscripcion"] = Relationship(back_populates="relacion_TC")
     fases: List["Fase"] = Relationship(back_populates="torneos_categorias")
-
     torneo: Optional["Torneo"] = Relationship(back_populates="relacion_categoria")
     categoria: Optional["Categoria"] = Relationship(back_populates="relacion_Torneo")
 
@@ -61,17 +66,10 @@ class Categoria(Categoria_schema, table=True):
     relacion_Torneo: List[Torneo_Categoria] = Relationship(back_populates="categoria")
 
 
-class Jugador(SQLModel, table=True):
+class Jugador(JugadorSchema, table=True):
     __tablename__: Any = "Jugadores"
     id: int | None = Field(default=None, primary_key=True)
 
-    nombre: str | None = None
-    puntaje: int | None = 0
-    generacion: date | None = None
-
-    carrera_id: int = Field(default=None, foreign_key="Carreras.id")
-    # Basicamente el nombre de 'carrera' se pondra en el relationship de carrera comoa atributo
-    # mientras "jugadores" es un atributo de class Carrera
     carrera: Optional["Carrera"] = Relationship(back_populates="jugadores")
     equipos: List["Equipo"] = Relationship(
         back_populates="jugadores", link_model=Jugador_Equipo
@@ -79,11 +77,9 @@ class Jugador(SQLModel, table=True):
     relacion_equipos: List["Jugador_Equipo"] = Relationship(back_populates="jugador")
 
 
-class Equipo(SQLModel, table=True):
+class Equipo(Equipo_schema, table=True):
     __tablename__: Any = "Equipos"
     id: int | None = Field(default=None, primary_key=True)
-    nombre: str
-    # Relationship
     inscripciones: List["Inscripcion"] = Relationship(back_populates="equipo")
     jugadores: List["Jugador"] = Relationship(
         back_populates="equipos", link_model=Jugador_Equipo
@@ -95,11 +91,9 @@ class Equipo(SQLModel, table=True):
     relacion_partido: List["Partido_Equipo"] = Relationship(back_populates="equipo")
 
 
-class Partido(SQLModel, table=True):
+class Partido(Partido_schema, table=True):
     __tablename__: Any = "Partidos"
     id: int | None = Field(default=None, primary_key=True)
-    # Fk
-    fase_id: int = Field(default=None, foreign_key="Fases.id")
 
     # RelationSHips
     equipos: List["Equipo"] = Relationship(
@@ -110,11 +104,9 @@ class Partido(SQLModel, table=True):
     relacion_equipos: List["Partido_Equipo"] = Relationship(back_populates="partido")
 
 
-class Fase(SQLModel, table=True):
+class Fase(Fase_schema, table=True):
     __tablename__: Any = "Fases"
     id: int | None = Field(default=None, primary_key=True)
-    # Fk
-    torneo_categoria_id: int = Field(default=None, foreign_key="Torneos_Categorias.id")
     # Relationship
     partidosJugados: List[Partido] = Relationship(back_populates="fase")
     torneos_categorias: Optional["Torneo_Categoria"] = Relationship(
@@ -122,11 +114,9 @@ class Fase(SQLModel, table=True):
     )
 
 
-class Torneo(SQLModel, table=True):
+class Torneo(Torneo_schema, table=True):
     __tablename__: Any = "Torneos"
     id: int | None = Field(default=None, primary_key=True)
-    nombre: str | None
-    fecha: date | None
     # Relationship
     categorias: List["Categoria"] = Relationship(
         back_populates="torneos", link_model=Torneo_Categoria
@@ -134,36 +124,26 @@ class Torneo(SQLModel, table=True):
     relacion_categoria: List[Torneo_Categoria] = Relationship(back_populates="torneo")
 
 
-class Seccion(SQLModel, table=True):
+class Seccion(Seccion_schema, table=True):
     __tablename__: Any = "Secciones"
     id: int | None = Field(default=None, primary_key=True)
-    # Fk
-    partido_id: int = Field(default=None, foreign_key="Partidos.id")
     # Relationship
     partido: Optional[Partido] = Relationship(back_populates="secciones")
     puntajesEquipos: List["PuntajeEquipo"] = Relationship(back_populates="seccion")
 
 
-class PuntajeEquipo(SQLModel, table=True):
+class PuntajeEquipo(PuntajeEquipo_schema, table=True):
     __tablename__: Any = "Puntajes_De_Equipos"
     id: int | None = Field(default=None, primary_key=True)
     puntaje: int | None
-    # Fk
-    partido_equipo_id: int = Field(default=None, foreign_key="Partidos_Equipos.id")
-    seccion_id: int = Field(default=None, foreign_key="Secciones.id")
-
     # Relationship
     relacion_PE: Optional[Partido_Equipo] = Relationship(back_populates="puntajeEquipo")
     seccion: Optional[Seccion] = Relationship(back_populates="puntajesEquipos")
 
 
-class Inscripcion(SQLModel, table=True):
+class Inscripcion(Inscripcion_schema, table=True):
     __tablename__: Any = "Inscripciones"
     id: int | None = Field(default=None, primary_key=True)
-    fecha: date | None
-    # Fk
-    equipo_id: int = Field(default=None, foreign_key="Equipos.id")
-    torneo_categoria_id: int = Field(default=None, foreign_key="Torneos_Categorias.id")
     # Relationship
     equipo: Optional[Equipo] = Relationship(back_populates="inscripciones")
     relacion_TC: Optional[Torneo_Categoria] = Relationship(
