@@ -1,18 +1,23 @@
 from sqlmodel import Session, select
 from app.models.tables import Fase, Torneo_Categoria
+from app.models.schemas import Fase_schema
 
 
-def create_fase(session: Session, torneo_categoria_id: int):
+def create_fase(session: Session, data: Fase_schema):
     # Validar que la relación TC exista
-    tc = session.get(Torneo_Categoria, torneo_categoria_id)
+    tc = session.get(Torneo_Categoria, data.torneo_categoria_id)
     if not tc:
         return 404
-
-    nueva_fase = Fase(torneo_categoria_id=torneo_categoria_id)
-    session.add(nueva_fase)
-    session.commit()
-    session.refresh(nueva_fase)
-    return nueva_fase
+    try:
+        nueva_fase = Fase.model_validate(data)
+        session.add(nueva_fase)
+        session.commit()
+        session.refresh(nueva_fase)
+        return nueva_fase
+    except Exception as e:
+        session.rollback()
+        print(f"Error en base de datos: {e}")
+        return 500
 
 
 def get_fase_all(session: Session):
@@ -25,21 +30,23 @@ def get_fase_by_id(session: Session, fase_id: int):
     return fase if fase else 404
 
 
-def update_fase(session: Session, fase_id: int, nuevo_tc_id: int):
+def update_fase(session: Session, fase_id: int, data: Fase_schema):
     fase_db = session.get(Fase, fase_id)
     if not fase_db:
         return 404
+    try:
+        datos_nuevos = data.model_dump(exclude_unset=True)
+        fase_db.sqlmodel_update(datos_nuevos)
 
-    # Validar que el nuevo TC existe si se va a cambiar
-    tc = session.get(Torneo_Categoria, nuevo_tc_id)
-    if not tc:
-        return 400  # Bad request, el nuevo ID no existe
+        session.add(fase_db)
+        session.commit()
+        session.refresh(fase_db)
+        return fase_db
 
-    fase_db.torneo_categoria_id = nuevo_tc_id
-    session.add(fase_db)
-    session.commit()
-    session.refresh(fase_db)
-    return fase_db
+    except Exception as e:
+        session.rollback()
+        print(f"Error al actualizar fase: {e}")
+        return 500
 
 
 def delete_fase(session: Session, fase_id: int):
