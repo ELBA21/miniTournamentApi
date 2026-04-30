@@ -41,3 +41,7 @@ class SecurityConfig:
 class DatabaseConfig:
     uri = os.getenv("POSTGRE_URI", "postgresql://user:password@localhost:5432/dbname")
     name = os.getenv("DATABASE_NAME", "postgresql")
+
+    @classmethod
+    def get_tull_uri(cls):
+        return f"{cls.uri.rstrip('/')}/{cls.name}"
