@@ -1,18 +1,27 @@
 from sqlmodel import Session, select
 from app.models.tables import Partido, Fase
+from app.models.schemas import Partido_schema
 
 
-def create_partido(session: Session, fase_id: int):
-    # Validar que la fase exista
-    db_fase = session.get(Fase, fase_id)
+def create_partido(session: Session, data: Partido_schema):
+    # 1. Validar que la fase exista
+    db_fase = session.get(Fase, data.fase_id)
     if not db_fase:
         return 404
 
-    nuevo_partido = Partido(fase_id=fase_id)
-    session.add(nuevo_partido)
-    session.commit()
-    session.refresh(nuevo_partido)
-    return nuevo_partido
+    try:
+        # 2. Validar y crear modelo desde el schema
+        nuevo_partido = Partido.model_validate(data)
+
+        session.add(nuevo_partido)
+        session.commit()
+        session.refresh(nuevo_partido)
+        return nuevo_partido
+
+    except Exception as e:
+        session.rollback()
+        print(f"Error al crear partido: {e}")
+        return 500
 
 
 def get_partido_all(session: Session):
@@ -24,21 +33,29 @@ def get_partido_by_id(session: Session, partido_id: int):
     return partido if partido else 404
 
 
-def update_partido_fase(session: Session, partido_id: int, nueva_fase_id: int):
+def update_partido(session: Session, partido_id: int, data: Partido_schema):
     partido_db = session.get(Partido, partido_id)
     if not partido_db:
         return 404
 
-    # Validar que la nueva fase exista
-    db_fase = session.get(Fase, nueva_fase_id)
-    if not db_fase:
-        return 400
+    try:
+        if data.fase_id is not None:
+            db_fase = session.get(Fase, data.fase_id)
+            if not db_fase:
+                return 400
 
-    partido_db.fase_id = nueva_fase_id
-    session.add(partido_db)
-    session.commit()
-    session.refresh(partido_db)
-    return partido_db
+        datos_nuevos = data.model_dump(exclude_unset=True)
+        partido_db.sqlmodel_update(datos_nuevos)
+
+        session.add(partido_db)
+        session.commit()
+        session.refresh(partido_db)
+        return partido_db
+
+    except Exception as e:
+        session.rollback()
+        print(f"Error al actualizar partido: {e}")
+        return 500
 
 
 def delete_partido(session: Session, partido_id: int):
