@@ -1,6 +1,5 @@
 from sqlmodel import Session, select
 from app.models.tables import Torneo
-from datetime import date
 from app.models.schemas import Torneo_schema
 
 
