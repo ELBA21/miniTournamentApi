@@ -1,28 +1,26 @@
 from sqlmodel import Session, select
 from app.models.tables import Jugador, Carrera
+from app.models.schemas import JugadorSchema, Jugador_schema_Update
 from datetime import date
 
 
-def create_Jugador(
-    session: Session,
-    nombre: str,
-    puntaje: int,
-    generacion: date,
-    carrera_id: int,
-):
-    if not nombre or puntaje is None or not generacion or not carrera_id:
-        return 400
-    carrera = session.get(Carrera, carrera_id)
+def create_jugador(session: Session, data: JugadorSchema):
+    carrera = session.get(Carrera, data.carrera_id)
     if not carrera:
-        return 401
-    nuevo_jugador = Jugador(
-        nombre=nombre, puntaje=puntaje, generacion=generacion, carrera_id=carrera_id
-    )
-    session.add(nuevo_jugador)
-    session.commit()
-    session.refresh(nuevo_jugador)
+        return 404
 
-    return nuevo_jugador
+    try:
+        nuevo_jugador = Jugador.model_validate(data)
+
+        session.add(nuevo_jugador)
+        session.commit()
+        session.refresh(nuevo_jugador)
+        return nuevo_jugador
+
+    except Exception as e:
+        session.rollback()
+        print(f"Error al crear jugador: {e}")
+        return 500
 
 
 def get_jugador_all(session: Session):
@@ -34,19 +32,25 @@ def get_jugador_byId(session: Session, search_id: int):
 
 
 # kwargs son -> Key words arguments
-def update_jugador(session: Session, jugador_id: int, **kwargs):
+def update_jugador(session: Session, jugador_id: int, data: Jugador_schema_Update):
+    # 1. Buscar jugador
     jugador_db = session.get(Jugador, jugador_id)
     if not jugador_db:
         return 404
 
-    for key, value in kwargs.items():
-        if value is not None:
-            setattr(jugador_db, key, value)
+    try:
+        datos_nuevos = data.model_dump(exclude_unset=True)
+        jugador_db.sqlmodel_update(datos_nuevos)
 
-    session.add(jugador_db)
-    session.commit()
-    session.refresh(jugador_db)
-    return jugador_db
+        session.add(jugador_db)
+        session.commit()
+        session.refresh(jugador_db)
+        return jugador_db
+
+    except Exception as e:
+        session.rollback()
+        print(f"Error al actualizar jugador: {e}")
+        return 500
 
 
 def delete_jugador(session: Session, jugador_id: int):
