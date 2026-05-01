@@ -1,4 +1,3 @@
-from pydantic import BaseModel
 from datetime import date
 from sqlmodel import Field, SQLModel
 
@@ -50,36 +49,54 @@ class Categoria_schema(SQLModel):
 
 
 # ================================
-# Partido_Equipo
-class JugadorSchema(BaseModel):
+#  Jugador
+class JugadorSchema(SQLModel):
     nombre: str | None = None
     puntaje: int | None = 0
     generacion: date | None = None
-    carrera_id: int | None = None
+    carrera_id: int = Field(default=None, foreign_key="Carreras.id")
 
 
+class Jugador_schema_Update(SQLModel):
+    nombre: str | None = None
+    puntaje: int | None = 0
+    generacion: date | None = None
+
+
+# ================================
+# Equipo
 class Equipo_schema(SQLModel):
     nombre: str
 
 
+# ================================
+#  Partido
 class Partido_schema(SQLModel):
     fase_id: int = Field(default=None, foreign_key="Fases.id")
 
 
+# ================================
+# Fase
 class Fase_schema(SQLModel):
     # Fk
     torneo_categoria_id: int = Field(default=None, foreign_key="Torneos_Categorias.id")
 
 
+# ================================
+# Torneo
 class Torneo_schema(SQLModel):
     nombre: str | None
     fecha: date | None
 
 
+# ================================
+# Seccion
 class Seccion_schema(SQLModel):
     partido_id: int = Field(default=None, foreign_key="Partidos.id")
 
 
+# ================================
+# PuntajeEquipo
 class PuntajeEquipo_schema(SQLModel):
     puntaje: int | None
     # Fk
@@ -87,6 +104,8 @@ class PuntajeEquipo_schema(SQLModel):
     seccion_id: int = Field(default=None, foreign_key="Secciones.id")
 
 
+# ================================
+# Inscripcion
 class Inscripcion_schema(SQLModel):
     fecha: date | None
     # Fk
