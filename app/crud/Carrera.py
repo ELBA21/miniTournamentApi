@@ -1,4 +1,3 @@
-from typing import List
 from sqlmodel import Session, select
 from app.models.tables import Carrera
 from app.models.schemas import Carrera_schema

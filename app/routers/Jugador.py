@@ -2,7 +2,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 from app.database import get_session
 from app.crud.Jugador import (
-    create_Jugador,
+    create_jugador,
     get_jugador_all,
     get_jugador_byId,
     update_jugador,
@@ -22,7 +22,7 @@ def router_create_jugador(
     carrera_id: int,
     session: Session = Depends(get_session),
 ):
-    result = create_Jugador(session, nombre, puntaje, generacion, carrera_id)
+    result = create_jugador(session, nombre, puntaje, generacion, carrera_id)
     if result == 400:
         raise HTTPException(status_code=400, detail="Falta dato")
     if result == 401:

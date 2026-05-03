@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 from app.database import get_session
+from app.models.schemas import Fase_schema
+from app.models.tables import Fase
 from app.crud.Fase import (
     create_fase,
     get_fase_all,
@@ -14,15 +16,17 @@ router = APIRouter(
 )
 
 
-@router.post("/create")
-def router_create_fase(
-    torneo_categoria_id: int, session: Session = Depends(get_session)
-):
-    result = create_fase(session, torneo_categoria_id)
+@router.post("/create", response_model=Fase)
+def router_create_fase(data: Fase_schema, session: Session = Depends(get_session)):
+    result = create_fase(session, data)
+
     if result == 404:
-        raise HTTPException(
-            status_code=404, detail="La relación Torneo-Categoría no existe"
-        )
+        # En el create, el 404 significa que el Torneo_Categoria no existe
+        raise HTTPException(status_code=404, detail="Torneo_Categoria no encontrado")
+
+    if result == 500:
+        raise HTTPException(status_code=500, detail="Error interno al crear la fase")
+
     return result
 
 
@@ -39,17 +43,25 @@ def router_get_fase_by_id(fase_id: int, session: Session = Depends(get_session))
     return result
 
 
-@router.put("/update/{fase_id}")
-def router_update_fase(
-    fase_id: int, nuevo_tc_id: int, session: Session = Depends(get_session)
+@router.patch("/update/{fase_id}", response_model=Fase)
+def router_patch_fase(
+    fase_id: int, data: Fase_schema, session: Session = Depends(get_session)
 ):
-    result = update_fase(session, fase_id, nuevo_tc_id)
+    result = update_fase(session, fase_id, data)
+
     if result == 404:
         raise HTTPException(status_code=404, detail="Fase no encontrada")
+
     if result == 400:
         raise HTTPException(
-            status_code=400, detail="El nuevo ID de Torneo-Categoría no es válido"
+            status_code=400, detail="El ID de Torneo_Categoria proporcionado no existe"
         )
+
+    if result == 500:
+        raise HTTPException(
+            status_code=500, detail="Error interno al actualizar la fase"
+        )
+
     return result
 
 
