@@ -26,6 +26,10 @@ def get_relaciones_all(session: Session):
     return session.exec(select(Jugador_Equipo)).all()
 
 
+def get_relaciones_byId(session: Session, search_id: int):
+    return session.get(Jugador_Equipo, search_id)
+
+
 def update_puntaje_relacion(
     session: Session, relacion_id: int, data: Jugador_Equipo_schema_update
 ):

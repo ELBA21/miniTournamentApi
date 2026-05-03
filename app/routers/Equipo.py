@@ -29,6 +29,11 @@ def router_create_Equipo(data: Equipo_schema, session: Session = Depends(get_ses
     return result
 
 
+@router.get("/get/all")
+def router_get_Equipo_all(session: Session = Depends(get_session)):
+    return get_Equipo_all(session)
+
+
 @router.get("/get/{equipo_id}")
 def router_get_Equipo_byId(equipo_id: int, session: Session = Depends(get_session)):
     result = get_Equipo_byId(session, equipo_id)

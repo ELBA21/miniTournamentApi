@@ -4,6 +4,7 @@ from app.database import get_session
 from app.crud.Jugador_Equipo import (
     create_relacion_jugador_equipo,
     get_relaciones_all,
+    get_relaciones_byId,
     update_puntaje_relacion,
     delete_relacion,
 )
@@ -38,9 +39,14 @@ def router_create_Jugador_Equipo(
     return result
 
 
-@router.get("/all")
+@router.get("/get/all")
 def router_get_all_asignaciones(session: Session = Depends(get_session)):
     return get_relaciones_all(session)
+
+
+@router.get("/get/byId/{search_id}")
+def router_get_relaciones_byId(search_id: int, session: Session = Depends(get_session)):
+    return get_relaciones_byId(session, search_id)
 
 
 @router.patch("/update/{relacion_id}", response_model=Jugador_Equipo)

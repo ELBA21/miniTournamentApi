@@ -2,6 +2,7 @@ from datetime import date
 from sqlmodel import Field, SQLModel
 
 
+#
 # ================================
 # Jugador_Equipo
 class Jugador_Equipo_schema(SQLModel):
@@ -111,3 +112,6 @@ class Inscripcion_schema(SQLModel):
     # Fk
     equipo_id: int = Field(default=None, foreign_key="Equipos.id")
     torneo_categoria_id: int = Field(default=None, foreign_key="Torneos_Categorias.id")
+
+
+#
