@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 from app.database import get_session
+from app.models.schemas import Inscripcion_schema
+from app.models.tables import Inscripcion
 from app.crud.Inscripcion import (
     create_inscripcion,
     get_inscripciones_all,
@@ -9,21 +11,33 @@ from app.crud.Inscripcion import (
 )
 from datetime import date
 
-router = APIRouter(prefix="/Inscripcion", tags=["Inscripciones de Equipos"])
+router = APIRouter(
+    prefix="/Inscripcion",
+    tags=["Inscripciones de Equipos"],
+    responses={404: {"descripcion": "No encontrado"}},
+)
 
 
-@router.post("/registrar")
-def router_registrar_inscripcion(
-    equipo_id: int,
-    torneo_categoria_id: int,
-    fecha: date | None = None,
-    session: Session = Depends(get_session),
+@router.post("/create", response_model=Inscripcion)
+def router_create_inscripcion(
+    data: Inscripcion_schema, session: Session = Depends(get_session)
 ):
-    result = create_inscripcion(session, equipo_id, torneo_categoria_id, fecha)
+    result = create_inscripcion(session, data)
+
+    # En tu lógica, 404 significa que el Equipo o el Torneo_Categoria no existen
     if result == 404:
         raise HTTPException(
-            status_code=404, detail="Equipo o Relación Torneo-Categoría no encontrada"
+            status_code=404,
+            detail="No se pudo crear la inscripción: El Equipo o el Torneo_Categoria no existen.",
         )
+
+    # Error de integridad o de conexión
+    if result == 500:
+        raise HTTPException(
+            status_code=500,
+            detail="Error interno del servidor al procesar la inscripción.",
+        )
+
     return result
 
 
