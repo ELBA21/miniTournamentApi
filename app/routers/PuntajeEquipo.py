@@ -1,28 +1,41 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 from app.database import get_session
+from app.models.schemas import PuntajeEquipo_schema
+from app.models.tables import PuntajeEquipo
 from app.crud.PuntajeEquipo import (
     create_puntaje_equipo,
-    get_puntajes_all,
-    update_valor_puntaje,
+    create_puntaje_equipo,
+    update_puntaje_equipo,
     delete_puntaje,
 )
 
-router = APIRouter(prefix="/PuntajeMarcador", tags=["Marcador por Sección"])
+router = APIRouter(
+    prefix="/PuntajeEquipo",
+    tags=["Puntajes de Equipos"],
+    responses={404: {"description": "No encontrado"}},
+)
 
 
-@router.post("/registrar")
-def router_registrar_puntaje(
-    partido_equipo_id: int,
-    seccion_id: int,
-    puntaje: int,
-    session: Session = Depends(get_session),
+@router.post("/create", response_model=PuntajeEquipo)
+def router_create_PuntajeEquipo(
+    data: PuntajeEquipo_schema, session: Session = Depends(get_session)
 ):
-    result = create_puntaje_equipo(session, partido_equipo_id, seccion_id, puntaje)
+    result = create_puntaje_equipo(session, data)
+
+    # Si no existe la relación partido-equipo o la sección
     if result == 404:
         raise HTTPException(
-            status_code=404, detail="Relación Partido-Equipo o Sección no encontrada"
+            status_code=404,
+            detail="No se pudo registrar el puntaje: La relación Partido-Equipo o la Sección no existen.",
         )
+
+    if result == 500:
+        raise HTTPException(
+            status_code=500,
+            detail="Error interno del servidor al registrar el puntaje.",
+        )
+
     return result
 
 
@@ -31,13 +44,31 @@ def router_get_all(session: Session = Depends(get_session)):
     return get_puntajes_all(session)
 
 
-@router.put("/update/{puntaje_id}")
-def router_update_valor(
-    puntaje_id: int, nuevo_valor: int, session: Session = Depends(get_session)
+@router.patch("/update/{puntaje_id}", response_model=PuntajeEquipo)
+def router_patch_PuntajeEquipo(
+    puntaje_id: int, data: PuntajeEquipo_schema, session: Session = Depends(get_session)
 ):
-    result = update_valor_puntaje(session, puntaje_id, nuevo_valor)
+    result = update_puntaje_equipo(session, puntaje_id, data)
+
+    # 1. El registro de puntaje específico no existe
     if result == 404:
-        raise HTTPException(status_code=404, detail="Registro de puntaje no encontrado")
+        raise HTTPException(
+            status_code=404,
+            detail=f"Registro de puntaje con ID {puntaje_id} no encontrado.",
+        )
+
+    # 2. Las nuevas FKs proporcionadas no son válidas
+    if result == 400:
+        raise HTTPException(
+            status_code=400,
+            detail="Los IDs de Partido-Equipo o Sección proporcionados para la actualización no son válidos.",
+        )
+
+    if result == 500:
+        raise HTTPException(
+            status_code=500, detail="Error interno al actualizar el puntaje."
+        )
+
     return result
 
 

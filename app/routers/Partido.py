@@ -5,9 +5,11 @@ from app.crud.Partido import (
     create_partido,
     get_partido_all,
     get_partido_by_id,
-    update_partido_fase,
+    update_partido,
     delete_partido,
 )
+from app.models.tables import Partido
+from app.models.schemas import Partido_schema
 
 router = APIRouter(
     prefix="/Partido",
@@ -16,11 +18,24 @@ router = APIRouter(
 )
 
 
-@router.post("/create")
-def router_create_partido(fase_id: int, session: Session = Depends(get_session)):
-    result = create_partido(session, fase_id)
+@router.post("/create", response_model=Partido)
+def router_create_partido(
+    data: Partido_schema, session: Session = Depends(get_session)
+):
+    result = create_partido(session, data)
+
+    # Si la fase no existe
     if result == 404:
-        raise HTTPException(status_code=404, detail="La Fase especificada no existe")
+        raise HTTPException(
+            status_code=404,
+            detail="No se pudo crear el partido: La Fase especificada no existe.",
+        )
+
+    if result == 500:
+        raise HTTPException(
+            status_code=500, detail="Error interno del servidor al crear el partido."
+        )
+
     return result
 
 
@@ -37,15 +52,28 @@ def router_get_partido(partido_id: int, session: Session = Depends(get_session))
     return result
 
 
-@router.put("/update-fase/{partido_id}")
-def router_update_fase(
-    partido_id: int, nueva_fase_id: int, session: Session = Depends(get_session)
+@router.patch("/update/{partido_id}", response_model=Partido)
+def router_patch_partido(
+    partido_id: int, data: Partido_schema, session: Session = Depends(get_session)
 ):
-    result = update_partido_fase(session, partido_id, nueva_fase_id)
+    result = update_partido(session, partido_id, data)
+
     if result == 404:
-        raise HTTPException(status_code=404, detail="Partido no encontrado")
+        raise HTTPException(
+            status_code=404, detail=f"Partido con ID {partido_id} no encontrado."
+        )
+
     if result == 400:
-        raise HTTPException(status_code=400, detail="La nueva Fase no es válida")
+        raise HTTPException(
+            status_code=400,
+            detail="La Fase proporcionada para la actualización no es válida.",
+        )
+
+    if result == 500:
+        raise HTTPException(
+            status_code=500, detail="Error interno al actualizar el partido."
+        )
+
     return result
 
 
