@@ -1,11 +1,13 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
+from typing import List
 from app.database import get_session
 from app.models.schemas import PuntajeEquipo_schema
 from app.models.tables import PuntajeEquipo
 from app.crud.PuntajeEquipo import (
     create_puntaje_equipo,
-    create_puntaje_equipo,
+    get_puntaje_equipo_all,
+    get_puntaje_equipo_byId,
     update_puntaje_equipo,
     delete_puntaje,
 )
@@ -39,9 +41,25 @@ def router_create_PuntajeEquipo(
     return result
 
 
-@router.get("/all")
-def router_get_all(session: Session = Depends(get_session)):
-    return get_puntajes_all(session)
+@router.get("/all", response_model=List[PuntajeEquipo])
+def router_get_puntaje_equipo_all(session: Session = Depends(get_session)):
+    # Simplemente devuelve la lista (puede ser una lista vacía [])
+    return get_puntaje_equipo_all(session)
+
+
+@router.get("/{search_id}", response_model=PuntajeEquipo)
+def router_get_puntaje_equipo_byId(
+    search_id: int, session: Session = Depends(get_session)
+):
+    result = get_puntaje_equipo_byId(session, search_id)
+
+    if not result:
+        raise HTTPException(
+            status_code=404,
+            detail=f"No se encontró el registro de puntaje con ID {search_id}",
+        )
+
+    return result
 
 
 @router.patch("/update/{puntaje_id}", response_model=PuntajeEquipo)

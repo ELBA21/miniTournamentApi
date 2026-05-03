@@ -1,4 +1,4 @@
-from sqlmodel import Session
+from sqlmodel import Session, select
 from app.models.tables import PuntajeEquipo, Partido_Equipo, Seccion
 from app.models.schemas import PuntajeEquipo_schema
 
@@ -24,6 +24,14 @@ def create_puntaje_equipo(session: Session, data: PuntajeEquipo_schema):
         session.rollback()
         print(f"Error al registrar puntaje: {e}")
         return 500
+
+
+def get_puntaje_equipo_all(session: Session):
+    return session.exec(select(PuntajeEquipo)).all()
+
+
+def get_puntaje_equipo_byId(session: Session, search_id: int):
+    return session.get(PuntajeEquipo, search_id)
 
 
 def update_puntaje_equipo(

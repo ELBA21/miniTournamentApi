@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 from app.database import get_session
+from app.models.schemas import Torneo_schema
+from app.models.tables import Torneo
 from app.crud.Torneo import (
     create_torneo,
     get_torneo_all,
@@ -17,13 +19,17 @@ router = APIRouter(
 )
 
 
-@router.post("/create")
-def router_create_torneo(
-    nombre: str, fecha: date, session: Session = Depends(get_session)
-):
-    result = create_torneo(session, nombre, fecha)
-    if result == 400:
-        raise HTTPException(status_code=400, detail="Nombre y fecha son requeridos")
+@router.post("/create", response_model=Torneo)
+def router_create_torneo(data: Torneo_schema, session: Session = Depends(get_session)):
+    result = create_torneo(session, data)
+
+    # En el create de Torneo, si falla, es un error de servidor (500)
+    if result == 500:
+        raise HTTPException(
+            status_code=500,
+            detail="Error interno del servidor al intentar crear el torneo.",
+        )
+
     return result
 
 
@@ -40,18 +46,24 @@ def router_get_torneo_by_id(torneo_id: int, session: Session = Depends(get_sessi
     return result
 
 
-@router.put("/update/{torneo_id}")
-def router_update_torneo(
-    torneo_id: int,
-    nombre: str | None = None,
-    fecha: date | None = None,
-    session: Session = Depends(get_session),
+@router.patch("/update/{torneo_id}", response_model=Torneo)
+def router_patch_torneo(
+    torneo_id: int, data: Torneo_schema, session: Session = Depends(get_session)
 ):
-    result = update_torneo(session, torneo_id, nombre, fecha)
+    result = update_torneo(session, torneo_id, data)
+
+    # Si el ID del torneo no existe
     if result == 404:
         raise HTTPException(
-            status_code=404, detail="No se encontró el torneo para actualizar"
+            status_code=404, detail=f"Torneo con ID {torneo_id} no encontrado."
         )
+
+    # Si falló la actualización por un error de BD
+    if result == 500:
+        raise HTTPException(
+            status_code=500, detail="Error interno al intentar actualizar el torneo."
+        )
+
     return result
 
 

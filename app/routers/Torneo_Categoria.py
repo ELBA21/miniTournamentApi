@@ -1,6 +1,8 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 from app.database import get_session
+from app.models.schemas import Torneos_Categorias_schema
+from app.models.tables import Torneo_Categoria
 from app.crud.Torneo_Categoria import (
     create_relacion_torneo_categoria,
     get_relaciones_tc_all,
@@ -8,19 +10,29 @@ from app.crud.Torneo_Categoria import (
     delete_relacion_torneo_categoria,
 )
 
-router = APIRouter(prefix="/TorneoCategoria", tags=["Asignación Torneo-Categoría"])
+router = APIRouter(
+    prefix="/TorneoCategoria",
+    tags=["Relación Torneo-Categoría"],
+    responses={404: {"description": "No encontrado"}},
+)
 
 
-@router.post("/vincular")
-def router_vincular_torneo_categoria(
+@router.post("/create", response_model=Torneo_Categoria)
+def router_create_Torneo_Categoria(
     torneo_id: int, categoria_id: int, session: Session = Depends(get_session)
 ):
     result = create_relacion_torneo_categoria(session, torneo_id, categoria_id)
+
+    # Si el torneo o la categoría no existen
     if result == 404:
         raise HTTPException(
             status_code=404,
-            detail="No se pudo crear la relación: Torneo o Categoría no encontrados",
+            detail="No se pudo crear la relación: El Torneo o la Categoría no existen.",
         )
+
+    # Nota: Aquí no pusiste try/except en tu CRUD, pero si la DB lanza error (ej. relación duplicada)
+    # FastAPI devolverá un 500 por defecto. Podrías envolver el CRUD luego.
+
     return result
 
 
