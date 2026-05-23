@@ -41,7 +41,7 @@ class Torneos_Categorias_schema(SQLModel):
 # ================================
 # Carrera
 class Carrera_schema(SQLModel):
-    nombre_carrera: str | None
+    nombre: str | None
 
 
 # ================================

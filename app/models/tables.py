@@ -103,7 +103,8 @@ class Partido(Partido_schema, table=True):
     secciones: List["Seccion"] = Relationship(back_populates="partido")
     relacion_equipos: List["Partido_Equipo"] = Relationship(back_populates="partido")
     partido_siguiente: Optional["Partido"] = Relationship(
-        back_populates="partidos_anteriores"
+        back_populates="partidos_anteriores",
+        sa_relationship_kwargs={"remote_side": "Partido.id"},
     )
     partidos_anteriores: List["Partido"] = Relationship(
         back_populates="partido_siguiente"
