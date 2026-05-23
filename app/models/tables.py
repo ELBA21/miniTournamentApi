@@ -102,6 +102,12 @@ class Partido(Partido_schema, table=True):
     fase: Optional["Fase"] = Relationship(back_populates="partidosJugados")
     secciones: List["Seccion"] = Relationship(back_populates="partido")
     relacion_equipos: List["Partido_Equipo"] = Relationship(back_populates="partido")
+    partido_siguiente: Optional["Partido"] = Relationship(
+        back_populates="partidos_anteriores"
+    )
+    partidos_anteriores: List["Partido"] = Relationship(
+        back_populates="partido_siguiente"
+    )
 
 
 class Fase(Fase_schema, table=True):

@@ -25,7 +25,7 @@ from app.routers.Inscripcion import router as inscripcion_router
 async def lifespan(_: FastAPI):
     # Esto corre la función síncrona en un hilo separado de forma segura
     await run_in_threadpool(sql_connection_check)
-    await run_in_threadpool(create_db_and_tables)
+    # await run_in_threadpool(create_db_and_tables)
     yield
 
 

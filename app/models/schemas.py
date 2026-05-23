@@ -1,5 +1,6 @@
 from datetime import date
 from sqlmodel import Field, SQLModel
+from typing import Optional
 
 
 #
@@ -74,6 +75,7 @@ class Equipo_schema(SQLModel):
 #  Partido
 class Partido_schema(SQLModel):
     fase_id: int = Field(default=None, foreign_key="Fases.id")
+    partido_siguiente_id: Optional[int] = Field(default=None, foreign_key="Partidos.id")
 
 
 # ================================

@@ -3,7 +3,7 @@ from typing import Generator
 
 from app.config import DatabaseConfig
 
-engine = create_engine(DatabaseConfig.get_tull_uri(), echo=True)
+engine = create_engine(DatabaseConfig.get_full_uri(), echo=True)
 
 
 def create_db_and_tables():

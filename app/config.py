@@ -43,5 +43,5 @@ class DatabaseConfig:
     name = os.getenv("DATABASE_NAME", "postgresql")
 
     @classmethod
-    def get_tull_uri(cls):
+    def get_full_uri(cls):
         return f"{cls.uri.rstrip('/')}/{cls.name}"
