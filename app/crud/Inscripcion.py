@@ -1,3 +1,4 @@
+from typing import List
 from sqlmodel import Session, select
 from app.models.tables import Inscripcion, Equipo, Torneo_Categoria
 from datetime import date

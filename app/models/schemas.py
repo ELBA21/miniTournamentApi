@@ -81,6 +81,8 @@ class Partido_schema(SQLModel):
 # ================================
 # Fase
 class Fase_schema(SQLModel):
+    nombre: str
+    orden: int
     # Fk
     torneo_categoria_id: int = Field(default=None, foreign_key="Torneos_Categorias.id")
 
