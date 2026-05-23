@@ -20,22 +20,10 @@ router = APIRouter(
 
 @router.post("/create", response_model=Jugador)
 def router_create_jugador(data: JugadorSchema, session: Session = Depends(get_session)):
-    result = create_jugador(session, data)
-
-    # Según tu CRUD: 404 si la Carrera no existe
-    if result == 404:
-        raise HTTPException(
-            status_code=404,
-            detail="No se pudo crear el jugador: La Carrera especificada no existe.",
-        )
-
-    if result == 500:
-        raise HTTPException(
-            status_code=500,
-            detail="Error interno al crear el jugador en la base de datos.",
-        )
-
-    return result
+    try:
+        return create_jugador(session, data)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/get/all")
@@ -48,12 +36,10 @@ def router_get_jugador_all(session: Session = Depends(get_session)):
 
 @router.get("/get/{search_id}")
 def router_get_jugador_byId(search_id: int, session: Session = Depends(get_session)):
-    result = get_jugador_byId(session, search_id)
-    if not result:
-        raise HTTPException(
-            status_code=404, detail=f"No se encuentra jugador con id {search_id}"
-        )
-    return result
+    try:
+        return get_jugador_byId(session, search_id)
+    except Exception as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 
 @router.patch("/update/{jugador_id}", response_model=Jugador)
@@ -62,26 +48,15 @@ def router_patch_jugador(
     data: Jugador_schema_Update,
     session: Session = Depends(get_session),
 ):
-    result = update_jugador(session, jugador_id, data)
-
-    # 404 si el jugador no existe
-    if result == 404:
-        raise HTTPException(
-            status_code=404, detail=f"Jugador con ID {jugador_id} no encontrado."
-        )
-
-    if result == 500:
-        raise HTTPException(
-            status_code=500,
-            detail="Error interno al intentar actualizar los datos del jugador.",
-        )
-
-    return result
+    try:
+        return update_jugador(session, jugador_id, data)
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 
 @router.delete("/delete/{jugador_id}")
 def router_delete_jugador(jugador_id: int, session: Session = Depends(get_session)):
-    result = delete_jugador(session, jugador_id)
-    if result == 404:
-        raise HTTPException(status_code=404, detail="No se encontro a jugador")
-    return result
+    try:
+        return delete_jugador(session, jugador_id)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))

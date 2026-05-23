@@ -7,8 +7,7 @@ from datetime import date
 def create_jugador(session: Session, data: JugadorSchema):
     carrera = session.get(Carrera, data.carrera_id)
     if not carrera:
-        return 404
-
+        raise LookupError("No hay carrera")
     try:
         nuevo_jugador = Jugador.model_validate(data)
 
@@ -19,8 +18,7 @@ def create_jugador(session: Session, data: JugadorSchema):
 
     except Exception as e:
         session.rollback()
-        print(f"Error al crear jugador: {e}")
-        return 500
+        raise
 
 
 def get_jugador_all(session: Session):
@@ -28,36 +26,42 @@ def get_jugador_all(session: Session):
 
 
 def get_jugador_byId(session: Session, search_id: int):
-    return session.get(Jugador, search_id)
+    jugador = session.get(Jugador, search_id)
+    if not jugador:
+        raise LookupError("Jugador no encontrado")
+    return jugador
 
 
-# kwargs son -> Key words arguments
 def update_jugador(session: Session, jugador_id: int, data: Jugador_schema_Update):
-    # 1. Buscar jugador
-    jugador_db = session.get(Jugador, jugador_id)
-    if not jugador_db:
-        return 404
-
     try:
+        if not jugador_id:
+            raise LookupError("No hay id")
+        jugador_db = get_jugador_byId(session, jugador_id)
+        if not jugador_db:
+            raise LookupError("No existe el jugador")
         datos_nuevos = data.model_dump(exclude_unset=True)
         jugador_db.sqlmodel_update(datos_nuevos)
 
         session.add(jugador_db)
         session.commit()
         session.refresh(jugador_db)
-        return jugador_db
 
+        return jugador_db
     except Exception as e:
         session.rollback()
-        print(f"Error al actualizar jugador: {e}")
-        return 500
+        raise
 
 
 def delete_jugador(session: Session, jugador_id: int):
-    jugador_db = session.get(Jugador, jugador_id)
-    if not jugador_db:
-        return 404
-
-    session.delete(jugador_db)
-    session.commit()
-    return True
+    try:
+        if not jugador_id:
+            raise LookupError("No hay id")
+        jugador_db = get_jugador_byId(session, jugador_id)
+        if not jugador_db:
+            raise LookupError("No existe el jugador")
+        session.delete(jugador_db)
+        session.commit()
+        return True
+    except Exception as e:
+        session.rollback()
+        raise

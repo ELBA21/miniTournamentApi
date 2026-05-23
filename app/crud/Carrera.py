@@ -28,9 +28,7 @@ def get_carrera_byId(session: Session, search_id: int):
 
 def update_nombre_carrera(session: Session, carrera_id: int, data: Carrera_schema):
     try:
-        carrera_db = session.get(Carrera, carrera_id)
-        if not carrera_db:
-            raise
+        carrera_db = get_carrera_byId(session, carrera_id)
         datos_nuevos = data.model_dump(exclude_unset=True)
         carrera_db.sqlmodel_update(datos_nuevos)
 
@@ -47,10 +45,10 @@ def update_nombre_carrera(session: Session, carrera_id: int, data: Carrera_schem
 def delete_carrera(session: Session, carrera_id: int):
     try:
         if not carrera_id:
-            raise
-        carrera_db = session.get(Carrera, carrera_id)
+            raise LookupError("No hay id")
+        carrera_db = get_carrera_byId(session, carrera_id)
         if not carrera_db:
-            raise
+            raise LookupError("No existe la carrera")
         session.delete(carrera_db)
         session.commit()
         return True
