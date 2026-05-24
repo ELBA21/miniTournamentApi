@@ -3,12 +3,7 @@ from sqlmodel import Session
 from app.database import get_session
 from app.models.schemas import Partido_Equipo_schema, Partido_Equipo_schema_update
 from app.models.tables import Partido_Equipo
-from app.crud.Partido_Equipo import (
-    create_partido_equipo,
-    get_partido_equipo_all,
-    update_partido_equipo,
-    delete_partido_equipo,
-)
+from app.crud.factory import crud_partido_equipo as crud
 
 router = APIRouter(
     prefix="/AsignacionPartido",
@@ -21,56 +16,32 @@ router = APIRouter(
 def router_create_Partido_Equipo(
     data: Partido_Equipo_schema, session: Session = Depends(get_session)
 ):
-    result = create_partido_equipo(session, data)
-
-    # Si falla una de las Foreign Keys (Equipo o Partido no existen)
-    if result == 404:
-        raise HTTPException(
-            status_code=404,
-            detail="No se pudo crear la asignación: El Equipo o el Partido no existen.",
-        )
-
-    if result == 500:
-        raise HTTPException(
-            status_code=500,
-            detail="Error interno al procesar la asignación del equipo al partido.",
-        )
-
-    return result
+    try:
+        return crud.create(session, data)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/all")
 def router_get_all_vinculos(session: Session = Depends(get_session)):
-    return get_partido_equipo_all(session)
+    return crud.get_all(session)
 
 
-@router.patch("/update/{pe_id}", response_model=Partido_Equipo)
+@router.patch("/update/{search_id}", response_model=Partido_Equipo)
 def router_patch_Partido_Equipo(
-    pe_id: int,
-    data: Partido_Equipo_schema_update,
+    search_id: int,
+    data: Partido_Equipo_schema,
     session: Session = Depends(get_session),
 ):
-    result = update_partido_equipo(session, pe_id, data)
-
-    # Si la relación ID no existe en la tabla intermedia
-    if result == 404:
-        raise HTTPException(
-            status_code=404,
-            detail=f"Relación Partido-Equipo con ID {pe_id} no encontrada.",
-        )
-
-    if result == 500:
-        raise HTTPException(
-            status_code=500,
-            detail="Error interno al intentar actualizar los datos de la relación.",
-        )
-
-    return result
+    try:
+        return crud.update(session, search_id, data)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.delete("/eliminar/{pe_id}")
-def router_delete_vinculo(pe_id: int, session: Session = Depends(get_session)):
-    result = delete_partido_equipo(session, pe_id)
-    if result == 404:
-        raise HTTPException(status_code=404, detail="ID no encontrado")
-    return {"message": "Vínculo eliminado correctamente"}
+@router.delete("/eliminar/{search_id}")
+def router_delete_vinculo(search_id: int, session: Session = Depends(get_session)):
+    try:
+        return crud.delete(session, search_id)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))

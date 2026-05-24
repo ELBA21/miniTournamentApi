@@ -3,12 +3,7 @@ from sqlmodel import Session
 from app.database import get_session
 from app.models.schemas import Torneos_Categorias_schema
 from app.models.tables import Torneo_Categoria
-from app.crud.Torneo_Categoria import (
-    create_relacion_torneo_categoria,
-    get_relaciones_tc_all,
-    get_relacion_tc_by_id,
-    delete_relacion_torneo_categoria,
-)
+from app.crud.factory import crud_torneo_categoria as crud
 
 router = APIRouter(
     prefix="/TorneoCategoria",
@@ -19,41 +14,32 @@ router = APIRouter(
 
 @router.post("/create", response_model=Torneo_Categoria)
 def router_create_Torneo_Categoria(
-    torneo_id: int, categoria_id: int, session: Session = Depends(get_session)
+    data: Torneos_Categorias_schema, session: Session = Depends(get_session)
 ):
-    result = create_relacion_torneo_categoria(session, torneo_id, categoria_id)
-
-    # Si el torneo o la categoría no existen
-    if result == 404:
-        raise HTTPException(
-            status_code=404,
-            detail="No se pudo crear la relación: El Torneo o la Categoría no existen.",
-        )
-
-    # Nota: Aquí no pusiste try/except en tu CRUD, pero si la DB lanza error (ej. relación duplicada)
-    # FastAPI devolverá un 500 por defecto. Podrías envolver el CRUD luego.
-
-    return result
+    try:
+        return crud.create(session, data)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
 @router.get("/all")
 def router_get_all_tc(session: Session = Depends(get_session)):
-    return get_relaciones_tc_all(session)
+    return crud.get_all(session)
 
 
-@router.get("/{tc_id}")
-def router_get_tc_by_id(tc_id: int, session: Session = Depends(get_session)):
-    result = get_relacion_tc_by_id(session, tc_id)
-    if result == 404:
-        raise HTTPException(status_code=404, detail="Relación no encontrada")
-    return result
+@router.get("/{search_id}")
+def router_get_tc_by_id(search_id: int, session: Session = Depends(get_session)):
+    try:
+        return crud.get_by_id(session, search_id)
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 
-@router.delete("/desvincular/{tc_id}")
+@router.delete("/desvincular/{search_id}")
 def router_desvincular_torneo_categoria(
-    tc_id: int, session: Session = Depends(get_session)
+    search_id: int, session: Session = Depends(get_session)
 ):
-    result = delete_relacion_torneo_categoria(session, tc_id)
-    if result == 404:
-        raise HTTPException(status_code=404, detail="Relación inexistente")
-    return {"message": "Categoría removida del torneo con éxito"}
+    try:
+        return crud.delete(session, search_id)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))

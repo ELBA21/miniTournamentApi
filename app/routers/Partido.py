@@ -1,13 +1,7 @@
 from fastapi import APIRouter, Depends, HTTPException
 from sqlmodel import Session
 from app.database import get_session
-from app.crud.Partido import (
-    create_partido,
-    get_partido_all,
-    get_partido_by_id,
-    update_partido,
-    delete_partido,
-)
+from app.crud.factory import crud_partido as crud
 from app.models.tables import Partido
 from app.models.schemas import Partido_schema
 
@@ -22,66 +16,38 @@ router = APIRouter(
 def router_create_partido(
     data: Partido_schema, session: Session = Depends(get_session)
 ):
-    result = create_partido(session, data)
-
-    # Si la fase no existe
-    if result == 404:
-        raise HTTPException(
-            status_code=404,
-            detail="No se pudo crear el partido: La Fase especificada no existe.",
-        )
-
-    if result == 500:
-        raise HTTPException(
-            status_code=500, detail="Error interno del servidor al crear el partido."
-        )
-
-    return result
+    try:
+        return crud.create(session, data)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.get("/all")
+@router.get("/get/all")
 def router_get_partidos(session: Session = Depends(get_session)):
-    return get_partido_all(session)
+    return crud.get_all(session)
 
 
-@router.get("/{partido_id}")
-def router_get_partido(partido_id: int, session: Session = Depends(get_session)):
-    result = get_partido_by_id(session, partido_id)
-    if result == 404:
-        raise HTTPException(status_code=404, detail="Partido no encontrado")
-    return result
+@router.get("/get/{search_id}")
+def router_get_partido(search_id: int, session: Session = Depends(get_session)):
+    try:
+        return crud.get_by_id(session, search_id)
+    except LookupError as e:
+        raise HTTPException(status_code=404, detail=str(e))
 
 
-@router.patch("/update/{partido_id}", response_model=Partido)
+@router.patch("/update/{search_id}", response_model=Partido)
 def router_patch_partido(
-    partido_id: int, data: Partido_schema, session: Session = Depends(get_session)
+    search_id: int, data: Partido_schema, session: Session = Depends(get_session)
 ):
-    result = update_partido(session, partido_id, data)
-
-    if result == 404:
-        raise HTTPException(
-            status_code=404, detail=f"Partido con ID {partido_id} no encontrado."
-        )
-
-    if result == 400:
-        raise HTTPException(
-            status_code=400,
-            detail="La Fase proporcionada para la actualización no es válida.",
-        )
-
-    if result == 500:
-        raise HTTPException(
-            status_code=500, detail="Error interno al actualizar el partido."
-        )
-
-    return result
+    try:
+        return crud.update(session, search_id, data)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 
-@router.delete("/delete/{partido_id}")
-def router_delete_partido(partido_id: int, session: Session = Depends(get_session)):
-    result = delete_partido(session, partido_id)
-    if result == 404:
-        raise HTTPException(
-            status_code=404, detail="No se pudo eliminar: ID inexistente"
-        )
-    return {"message": f"Partido {partido_id} eliminado exitosamente"}
+@router.delete("/delete/{search_id}")
+def router_delete_partido(search_id: int, session: Session = Depends(get_session)):
+    try:
+        return crud.delete(session, search_id)
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
