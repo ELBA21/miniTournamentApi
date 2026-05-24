@@ -17,7 +17,7 @@ def test_obtener_carrera_error_404(client):
     response = client.get("/carrera/get/999")
 
     assert response.status_code == 404
-    assert response.json()["detail"] == "Carrera no encontrada"
+    assert response.json()["detail"] == "Carrera no encontrado"
 
 
 def test_obtener_todas_las_carreras(client):
