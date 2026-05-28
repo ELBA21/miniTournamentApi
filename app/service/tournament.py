@@ -3,14 +3,12 @@ from typing import List
 from sqlmodel import Session, select
 from app.models.schemas import (
     Fase_schema,
-    Torneos_Categorias_schema,
     Partido_schema,
 )
 from app.models.tables import Fase, Partido, Equipo, Inscripcion
 from app.crud.factory import (
     crud_fase as fase,
     crud_partido as partido,
-    crud_torneo_categoria as torneo_categoria,
 )
 
 
@@ -26,9 +24,22 @@ def get_equipos_participantes(
     )
 
 
+def bool_fase_final(session: Session, torneo_categoria_id) -> bool:
+    fase_final = session.exec(
+        select(Fase).where(
+            Fase.torneo_categoria_id == torneo_categoria_id, Fase.nombre == "Final"
+        )
+    ).first()
+    if fase_final is not None:
+        return True
+    return False
+
+
 def generar_rondas_para_torneo_categoria(
     torneo_categoria_id: int, session: Session
 ) -> tuple[list[Fase], list[Partido]]:
+    if bool_fase_final(session, torneo_categoria_id):
+        return [], []
     equipos = get_equipos_participantes(session, torneo_categoria_id)
     cant_equipos = len(equipos)
     if cant_equipos < 2:
