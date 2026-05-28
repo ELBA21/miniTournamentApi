@@ -6,7 +6,7 @@ from app.models.schemas import (
     Torneos_Categorias_schema,
     Partido_schema,
 )
-from app.models.tables import Equipo, Inscripcion
+from app.models.tables import Fase, Partido, Equipo, Inscripcion
 from app.crud.factory import (
     crud_fase as fase,
     crud_partido as partido,
@@ -14,7 +14,9 @@ from app.crud.factory import (
 )
 
 
-def get_equipos(session: Session, torneo_categoria_id: int) -> List[Equipo]:
+def get_equipos_participantes(
+    session: Session, torneo_categoria_id: int
+) -> List[Equipo]:
     return list(
         session.exec(
             select(Equipo)
@@ -24,31 +26,29 @@ def get_equipos(session: Session, torneo_categoria_id: int) -> List[Equipo]:
     )
 
 
-def generar_rondas(torneo_categoria_id: int, session: Session):
-    equipos = get_equipos(session, torneo_categoria_id)
+def generar_rondas_para_torneo_categoria(
+    torneo_categoria_id: int, session: Session
+) -> tuple[list[Fase], list[Partido]]:
+    equipos = get_equipos_participantes(session, torneo_categoria_id)
     cant_equipos = len(equipos)
     if cant_equipos < 2:
-        return []
+        return [], []
 
     # Indicamos la cantidad de fases
-    cant_fases = ceil(log(cant_equipos, 2))
+    cant_fases: int = ceil(log(cant_equipos, 2))
     fases_creadas = []
     partidos_creados = []
-    nombres = {
-        0: "Final",
-        1: "Semi",
-        2: "Cuartos",
-        3: "Octavos",
-    }
-    for paso in range(cant_fases):
+    partidos_ronda_sig = []  # lista de segunda iteracion
+    i = 0
+    for i in range(cant_fases):
         nombre_fase = f"Ronda {i}"
-        if i == 1:
+        if i == 0:
             nombre_fase = "Final"
-        elif i == 2:
+        elif i == 1:
             nombre_fase = "Semifinal"
-        elif i == 3:
+        elif i == 2:
             nombre_fase = "Cuartos de final"
-        elif i == 4:
+        elif i == 3:
             nombre_fase = "Octavos de final"
 
         nueva_fase = Fase_schema(
@@ -56,9 +56,28 @@ def generar_rondas(torneo_categoria_id: int, session: Session):
         )
         fase_db = fase.create(session, nueva_fase)
         fases_creadas.append(fase_db)
-        if i == 1:
-            nuevo_partido = Partido_schema(fase_id=fase_db.id)
-        nuevo_partido = Partido_schema(
-            fase_id=fase_db.id, partido_siguiente_id=partidos_creados[-1]
-        )
-        return fases_creadas
+        # Obtenemos los partidos a jugar en la fase actual
+        cant_partidos_fase: int = 2**i
+        partidos_esta_ronda = []
+        # La unica finalidad de esta linea es callar al pyright
+        assert fase_db.id is not None
+
+        for j in range(cant_partidos_fase):
+            partido_sig_id = None
+
+            if i > 0 and list(partidos_ronda_sig):
+                partido_sig_id = partidos_ronda_sig[j // 2].id
+            nuevo_partido = Partido_schema(
+                # esta weaita del int esta nomas para callar al pyright
+                fase_id=fase_db.id,
+                partido_siguiente_id=partido_sig_id,
+            )
+            partido_db = partido.create(session, nuevo_partido)
+            partidos_esta_ronda.append(partido_db)
+            partidos_creados.append(partido_db)
+
+        partidos_ronda_sig = partidos_esta_ronda
+
+    fases_creadas.reverse()
+    partidos_creados.reverse()
+    return fases_creadas, partidos_creados
