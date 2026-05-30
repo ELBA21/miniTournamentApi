@@ -1,14 +1,13 @@
 from math import log, ceil
 from typing import List
-from sqlmodel import Session, select
-from app.models.schemas import (
-    Fase_schema,
-    Partido_schema,
-)
-from app.models.tables import Fase, Partido, Equipo, Inscripcion
+import random
+from sqlmodel import Session, desc, select
+from app.models.schemas import Fase_schema, Partido_schema, Partido_Equipo_schema
+from app.models.tables import Fase, Partido, Equipo, Inscripcion, Torneo_Categoria
 from app.crud.factory import (
     crud_fase as fase,
     crud_partido as partido,
+    crud_partido_equipo as partido_equipo,
 )
 
 
@@ -92,3 +91,60 @@ def generar_rondas_para_torneo_categoria(
     fases_creadas.reverse()
     partidos_creados.reverse()
     return fases_creadas, partidos_creados
+
+
+def inicializar_torneo(torneo_categoria_id: int, session: Session):
+    try:
+        equipos_en_torneo_categoria = get_equipos_participantes(
+            session, torneo_categoria_id
+        )
+        cant_equipos = len(equipos_en_torneo_categoria)
+        if cant_equipos < 2:
+            raise ValueError("Se necesitan mas equipos")
+
+        tam_fase = 2 ** ceil(log(cant_equipos, 2))
+        random.shuffle(equipos_en_torneo_categoria)
+        equipos_en_torneo_categoria += [None] * (tam_fase - cant_equipos)
+
+        fase_inicial = session.exec(
+            select(Fase)
+            .where(Fase.torneo_categoria_id == torneo_categoria_id)
+            .order_by(desc(Fase.orden))
+        ).first()
+
+        if fase_inicial is None:
+            raise ValueError("No exite la fase, genere rondas primero")
+
+        id_de_la_fase_mayor = fase_inicial.id
+        partidos_fase_mayor = session.exec(
+            select(Partido).where(Partido.fase_id == id_de_la_fase_mayor)
+        ).all()
+
+        for i, partido in enumerate(partidos_fase_mayor):
+            equipo_a = equipos_en_torneo_categoria[i * 2]
+            equipo_b = equipos_en_torneo_categoria[i * 2 + 1]
+
+            if equipo_a is None and equipo_b is None:
+                continue
+
+            if partido.id is None:
+                raise ValueError("Partido sin ID")
+
+            if equipo_a is not None:
+                partido_equipo.create(
+                    session,
+                    Partido_Equipo_schema(
+                        ganador=False, partido_id=partido.id, equipo_id=equipo_a.id
+                    ),
+                )
+
+            if equipo_b is not None:
+                partido_equipo.create(
+                    session,
+                    Partido_Equipo_schema(
+                        ganador=False, partido_id=partido.id, equipo_id=equipo_b.id
+                    ),
+                )
+
+    except Exception:
+        raise
