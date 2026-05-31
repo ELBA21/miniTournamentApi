@@ -21,6 +21,7 @@ from app.routers.crud.PuntajeEquipo import router as puntajeEquipo_router
 from app.routers.crud.Inscripcion import router as inscripcion_router
 from app.routers.service.tournament import router as fases_generador_router
 from app.routers.service.partidos import router as partido_manager_router
+from app.routers.service.bracket import router as bracket_router
 
 
 @asynccontextmanager
@@ -59,6 +60,7 @@ app.include_router(puntajeEquipo_router)
 app.include_router(inscripcion_router)
 app.include_router(fases_generador_router)
 app.include_router(partido_manager_router)
+app.include_router(bracket_router)
 
 
 # Healthcheck Endpoint

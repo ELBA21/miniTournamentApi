@@ -46,4 +46,4 @@ def definir_ganador_partido(session: Session, partido_id: int, equipo_ganador_id
                 equipo_id=equipo_ganador_id,
             ),
         )
-    session.flush()
+    session.commit()
