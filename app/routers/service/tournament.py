@@ -9,7 +9,7 @@ from app.service.tournament import (
 
 
 router = APIRouter(
-    prefix="/service", tags=["Generador"], responses={404: {"description": "Error"}}
+    prefix="/tournament", tags=["Generador"], responses={404: {"description": "Error"}}
 )
 
 
